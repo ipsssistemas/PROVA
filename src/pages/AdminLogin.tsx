@@ -11,7 +11,6 @@ const AdminLogin = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [isSignup, setIsSignup] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -20,35 +19,23 @@ const AdminLogin = () => {
     setLoading(true);
 
     try {
-      if (isSignup) {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: { emailRedirectTo: window.location.origin },
-        });
-        if (error) throw error;
-        toast({ title: "Conta criada com sucesso!", description: "Faça login para continuar." });
-        setIsSignup(false);
-      } else {
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
 
-        // Check admin role
-        const { data: roles } = await supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", data.user.id);
+      const { data: roles } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", data.user.id);
 
-        const isAdmin = roles?.some((r: any) => r.role === "admin");
-        if (!isAdmin) {
-          await supabase.auth.signOut();
-          toast({ title: "Acesso negado", description: "Você não tem permissão de administrador.", variant: "destructive" });
-          setLoading(false);
-          return;
-        }
-
-        navigate("/admin/results");
+      const isAdmin = roles?.some((r: any) => r.role === "admin");
+      if (!isAdmin) {
+        await supabase.auth.signOut();
+        toast({ title: "Acesso negado", description: "Você não tem permissão de administrador.", variant: "destructive" });
+        setLoading(false);
+        return;
       }
+
+      navigate("/admin/results");
     } catch (error: any) {
       toast({ title: "Erro", description: error.message, variant: "destructive" });
     } finally {
@@ -91,17 +78,9 @@ const AdminLogin = () => {
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
               <LogIn className="h-4 w-4 mr-2" />
-              {loading ? "Carregando..." : isSignup ? "Criar Conta" : "Entrar"}
+              {loading ? "Carregando..." : "Entrar"}
             </Button>
           </form>
-          <div className="mt-4 text-center">
-            <button
-              onClick={() => setIsSignup(!isSignup)}
-              className="text-sm text-muted-foreground hover:text-primary transition-colors"
-            >
-              {isSignup ? "Já tem conta? Faça login" : "Primeira vez? Criar conta"}
-            </button>
-          </div>
         </CardContent>
       </Card>
     </div>
