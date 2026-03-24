@@ -20,12 +20,7 @@ const AdminLogin = () => {
     setLoading(true);
 
     try {
-      if (isSignup) {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: { emailRedirectTo: window.location.origin },
-        });
+      {
         if (error) throw error;
         toast({ title: "Conta criada com sucesso!", description: "Faça login para continuar." });
         setIsSignup(false);
