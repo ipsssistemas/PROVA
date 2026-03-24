@@ -1,0 +1,1 @@
+ALTER TABLE public.exam_sessions ALTER COLUMN access_code_id DROP NOT NULL;
