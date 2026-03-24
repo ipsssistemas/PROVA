@@ -14,7 +14,167 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      access_codes: {
+        Row: {
+          candidate_email: string
+          candidate_name: string | null
+          code: string
+          created_at: string
+          exam_duration_minutes: number
+          id: string
+          is_used: boolean
+        }
+        Insert: {
+          candidate_email: string
+          candidate_name?: string | null
+          code: string
+          created_at?: string
+          exam_duration_minutes?: number
+          id?: string
+          is_used?: boolean
+        }
+        Update: {
+          candidate_email?: string
+          candidate_name?: string | null
+          code?: string
+          created_at?: string
+          exam_duration_minutes?: number
+          id?: string
+          is_used?: boolean
+        }
+        Relationships: []
+      }
+      answers: {
+        Row: {
+          answered_at: string
+          id: string
+          is_correct: boolean
+          question_id: number
+          selected_option: string
+          session_id: string
+        }
+        Insert: {
+          answered_at?: string
+          id?: string
+          is_correct: boolean
+          question_id: number
+          selected_option: string
+          session_id: string
+        }
+        Update: {
+          answered_at?: string
+          id?: string
+          is_correct?: boolean
+          question_id?: number
+          selected_option?: string
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "answers_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "answers_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "exam_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      exam_sessions: {
+        Row: {
+          access_code_id: string
+          candidate_email: string
+          candidate_name: string
+          created_at: string
+          duration_minutes: number
+          finished_at: string | null
+          id: string
+          score: number | null
+          started_at: string
+          status: string
+          total_questions: number
+        }
+        Insert: {
+          access_code_id: string
+          candidate_email: string
+          candidate_name: string
+          created_at?: string
+          duration_minutes?: number
+          finished_at?: string | null
+          id?: string
+          score?: number | null
+          started_at?: string
+          status?: string
+          total_questions?: number
+        }
+        Update: {
+          access_code_id?: string
+          candidate_email?: string
+          candidate_name?: string
+          created_at?: string
+          duration_minutes?: number
+          finished_at?: string | null
+          id?: string
+          score?: number | null
+          started_at?: string
+          status?: string
+          total_questions?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exam_sessions_access_code_id_fkey"
+            columns: ["access_code_id"]
+            isOneToOne: false
+            referencedRelation: "access_codes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      questions: {
+        Row: {
+          category: string
+          correct_option: string
+          created_at: string
+          id: number
+          option_a: string
+          option_b: string
+          option_c: string
+          option_d: string | null
+          option_e: string | null
+          question_text: string
+        }
+        Insert: {
+          category: string
+          correct_option: string
+          created_at?: string
+          id?: number
+          option_a: string
+          option_b: string
+          option_c: string
+          option_d?: string | null
+          option_e?: string | null
+          question_text: string
+        }
+        Update: {
+          category?: string
+          correct_option?: string
+          created_at?: string
+          id?: number
+          option_a?: string
+          option_b?: string
+          option_c?: string
+          option_d?: string | null
+          option_e?: string | null
+          question_text?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
