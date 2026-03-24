@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Shield, LogIn } from "lucide-react";
+import { Shield, LogIn, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -40,13 +40,11 @@ const Index = () => {
         return;
       }
 
-      // Mark code as used
       await supabase
         .from("access_codes")
         .update({ is_used: true, candidate_name: name.trim() })
         .eq("id", accessCode.id);
 
-      // Create exam session
       const { data: session, error: sessionError } = await supabase
         .from("exam_sessions")
         .insert({
@@ -60,6 +58,34 @@ const Index = () => {
 
       if (sessionError || !session) {
         toast({ title: "Erro ao iniciar prova", variant: "destructive" });
+        setLoading(false);
+        return;
+      }
+
+      navigate(`/exam/${session.id}`);
+    } catch {
+      toast({ title: "Erro de conexão", variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDemo = async () => {
+    setLoading(true);
+    try {
+      const { data: session, error } = await supabase
+        .from("exam_sessions")
+        .insert({
+          access_code_id: null as any,
+          candidate_name: "Modo Demonstração",
+          candidate_email: "demo@smarthomepremium.com",
+          duration_minutes: 45,
+        })
+        .select()
+        .single();
+
+      if (error || !session) {
+        toast({ title: "Erro ao iniciar demonstração", variant: "destructive" });
         setLoading(false);
         return;
       }
@@ -114,6 +140,27 @@ const Index = () => {
             <LogIn className="h-4 w-4 mr-2" />
             {loading ? "Verificando..." : "Iniciar Prova"}
           </Button>
+
+          <div className="relative my-2">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-card px-2 text-muted-foreground">ou</span>
+            </div>
+          </div>
+
+          <Button
+            variant="outline"
+            className="w-full"
+            size="lg"
+            onClick={handleDemo}
+            disabled={loading}
+          >
+            <Play className="h-4 w-4 mr-2" />
+            Iniciar Prova Demonstração
+          </Button>
+
           <p className="text-xs text-center text-muted-foreground">
             O código de acesso é fornecido pela equipe Smart Home Premium.
           </p>
