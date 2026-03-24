@@ -88,7 +88,7 @@ export type Database = {
       }
       exam_sessions: {
         Row: {
-          access_code_id: string
+          access_code_id: string | null
           candidate_email: string
           candidate_name: string
           created_at: string
@@ -101,7 +101,7 @@ export type Database = {
           total_questions: number
         }
         Insert: {
-          access_code_id: string
+          access_code_id?: string | null
           candidate_email: string
           candidate_name: string
           created_at?: string
@@ -114,7 +114,7 @@ export type Database = {
           total_questions?: number
         }
         Update: {
-          access_code_id?: string
+          access_code_id?: string | null
           candidate_email?: string
           candidate_name?: string
           created_at?: string
