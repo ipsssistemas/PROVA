@@ -7,6 +7,7 @@ import Index from "./pages/Index.tsx";
 import Exam from "./pages/Exam.tsx";
 import AdminLogin from "./pages/AdminLogin.tsx";
 import AdminResults from "./pages/AdminResults.tsx";
+import AdminAccessCodes from "./pages/AdminAccessCodes.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
