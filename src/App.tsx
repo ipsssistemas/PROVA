@@ -7,6 +7,7 @@ import Index from "./pages/Index.tsx";
 import Exam from "./pages/Exam.tsx";
 import AdminLogin from "./pages/AdminLogin.tsx";
 import AdminResults from "./pages/AdminResults.tsx";
+import AdminAccessCodes from "./pages/AdminAccessCodes.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -22,6 +23,7 @@ const App = () => (
           <Route path="/exam/:sessionId" element={<Exam />} />
           <Route path="/admin" element={<AdminLogin />} />
           <Route path="/admin/results" element={<AdminResults />} />
+          <Route path="/admin/codes" element={<AdminAccessCodes />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
