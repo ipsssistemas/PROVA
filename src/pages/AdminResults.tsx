@@ -172,9 +172,14 @@ const AdminResults = () => {
             <h1 className="text-lg font-bold font-['Space_Grotesk']">Smart Home Premium</h1>
             <p className="text-xs text-muted-foreground">Painel de Resultados</p>
           </div>
-          <Button variant="outline" size="sm" onClick={handleLogout}>
-            <LogOut className="h-4 w-4 mr-1" /> Sair
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => navigate("/admin/codes")}>
+              <KeyRound className="h-4 w-4 mr-1" /> Códigos
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleLogout}>
+              <LogOut className="h-4 w-4 mr-1" /> Sair
+            </Button>
+          </div>
         </div>
       </header>
 
