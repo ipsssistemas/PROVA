@@ -23,6 +23,7 @@ const App = () => (
           <Route path="/exam/:sessionId" element={<Exam />} />
           <Route path="/admin" element={<AdminLogin />} />
           <Route path="/admin/results" element={<AdminResults />} />
+          <Route path="/admin/codes" element={<AdminAccessCodes />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
