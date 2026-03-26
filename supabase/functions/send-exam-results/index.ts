@@ -1,6 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { SmtpClient } from "https://deno.land/x/smtp@v0.7.0/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -9,6 +8,41 @@ const corsHeaders = {
 };
 
 const GMAIL_USER = "ipsssistema@gmail.com";
+
+function encodeBase64(str: string): string {
+  return btoa(unescape(encodeURIComponent(str)));
+}
+
+function buildMimeMessage(
+  from: string,
+  to: string,
+  subject: string,
+  htmlBody: string
+): string {
+  const boundary = "boundary_" + crypto.randomUUID().replace(/-/g, "");
+  const lines = [
+    `From: ${from}`,
+    `To: ${to}`,
+    `Subject: =?UTF-8?B?${encodeBase64(subject)}?=`,
+    `MIME-Version: 1.0`,
+    `Content-Type: multipart/alternative; boundary="${boundary}"`,
+    ``,
+    `--${boundary}`,
+    `Content-Type: text/plain; charset=UTF-8`,
+    `Content-Transfer-Encoding: base64`,
+    ``,
+    encodeBase64(`Resultado da sua avaliação técnica Smart Home Premium.`),
+    ``,
+    `--${boundary}`,
+    `Content-Type: text/html; charset=UTF-8`,
+    `Content-Transfer-Encoding: base64`,
+    ``,
+    encodeBase64(htmlBody),
+    ``,
+    `--${boundary}--`,
+  ];
+  return lines.join("\r\n");
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -23,7 +57,6 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Get session details
     const { data: session, error: sessionError } = await supabase
       .from("exam_sessions")
       .select("*")
@@ -37,7 +70,6 @@ serve(async (req) => {
       );
     }
 
-    // Get answers with question details for category breakdown
     const { data: answers } = await supabase
       .from("answers")
       .select("is_correct, question_id")
@@ -52,12 +84,10 @@ serve(async (req) => {
     const percentage = Math.round((score / total) * 100);
     const status = session.status === "timed_out" ? "Tempo esgotado" : "Concluída";
 
-    // Build category breakdown
     const categoryMap: Record<string, { correct: number; total: number }> = {};
     if (answers && questions) {
       const questionCategoryMap: Record<number, string> = {};
       questions.forEach((q: any) => { questionCategoryMap[q.id] = q.category; });
-
       answers.forEach((a: any) => {
         const cat = questionCategoryMap[a.question_id] || "Outros";
         if (!categoryMap[cat]) categoryMap[cat] = { correct: 0, total: 0 };
@@ -88,14 +118,10 @@ serve(async (req) => {
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f3f4f6; padding: 32px 0;">
     <tr><td align="center">
       <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff; border-radius:12px; overflow:hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-        
-        <!-- Header -->
         <tr><td style="background: linear-gradient(135deg, #0066ff, #0044cc); padding: 32px; text-align: center;">
           <h1 style="color:#ffffff; margin:0; font-size:24px;">🏠 Smart Home Premium</h1>
           <p style="color:#e0e7ff; margin:8px 0 0; font-size:14px;">Resultado da Avaliação Técnica</p>
         </td></tr>
-
-        <!-- Body -->
         <tr><td style="padding: 32px;">
           <p style="font-size:16px; color:#374151; margin:0 0 8px;">Olá, <strong>${session.candidate_name}</strong>!</p>
           <p style="font-size:14px; color:#6b7280; margin:0 0 24px;">
@@ -103,8 +129,6 @@ serve(async (req) => {
               ? "O tempo da sua prova se encerrou. Veja abaixo o seu desempenho:" 
               : "Sua avaliação técnica foi concluída com sucesso. Confira o resultado:"}
           </p>
-
-          <!-- Score Card -->
           <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fafb; border-radius:8px; border: 1px solid #e5e7eb; margin-bottom:24px;">
             <tr>
               <td style="padding:24px; text-align:center; border-right: 1px solid #e5e7eb;">
@@ -121,8 +145,6 @@ serve(async (req) => {
               </td>
             </tr>
           </table>
-
-          <!-- Category Breakdown -->
           ${categoryRows ? `
           <h3 style="font-size:16px; color:#111827; margin:0 0 12px;">📊 Desempenho por Categoria</h3>
           <table width="100%" cellpadding="0" cellspacing="0" style="border: 1px solid #e5e7eb; border-radius:8px; overflow:hidden; margin-bottom:24px;">
@@ -134,53 +156,58 @@ serve(async (req) => {
             ${categoryRows}
           </table>
           ` : ""}
-
-          <!-- Info -->
-          <table width="100%" cellpadding="0" cellspacing="0" style="background:#eff6ff; border-radius:8px; padding:16px; margin-bottom:24px;">
+          <table width="100%" cellpadding="0" cellspacing="0" style="background:#eff6ff; border-radius:8px; margin-bottom:24px;">
             <tr><td style="padding:16px;">
               <p style="margin:0; font-size:14px; color:#1e40af;">
-                📞 A equipe da <strong>Smart Home Premium</strong> entrará em contato com você em breve para os próximos passos do processo seletivo.
+                📞 A equipe da <strong>Smart Home Premium</strong> entrará em contato com você em breve.
               </p>
             </td></tr>
           </table>
-
           <p style="font-size:12px; color:#9ca3af; margin:0;">Status da prova: ${status}</p>
         </td></tr>
-
-        <!-- Footer -->
         <tr><td style="background:#f9fafb; padding:20px 32px; text-align:center; border-top: 1px solid #e5e7eb;">
           <p style="margin:0; font-size:12px; color:#9ca3af;">
             © ${new Date().getFullYear()} Smart Home Premium — Todos os direitos reservados
           </p>
-          <p style="margin:4px 0 0; font-size:11px; color:#d1d5db;">
-            Este é um e-mail automático, por favor não responda.
-          </p>
         </td></tr>
-
       </table>
     </td></tr>
   </table>
 </body>
 </html>`;
 
-    // Send email via Gmail SMTP
-    const client = new SmtpClient();
-    await client.connectTLS({
-      hostname: "smtp.gmail.com",
-      port: 465,
-      username: GMAIL_USER,
-      password: Deno.env.get("GMAIL_APP_PASSWORD")!,
-    });
+    const fromHeader = `Smart Home Premium <${GMAIL_USER}>`;
+    const subject = `Resultado da Avaliação Técnica — ${score}/${total} (${percentage}%)`;
+    const rawMessage = buildMimeMessage(fromHeader, session.candidate_email, subject, htmlBody);
 
-    await client.send({
-      from: `Smart Home Premium <${GMAIL_USER}>`,
-      to: session.candidate_email,
-      subject: `Resultado da Avaliação Técnica — ${score}/${total} (${percentage}%)`,
-      content: `Resultado: ${score}/${total} (${percentage}%)`,
-      html: htmlBody,
-    });
+    const gmailPassword = Deno.env.get("GMAIL_APP_PASSWORD")!;
+    const conn = await Deno.connectTls({ hostname: "smtp.gmail.com", port: 465 });
+    const encoder = new TextEncoder();
+    const decoder = new TextDecoder();
 
-    await client.close();
+    async function readResponse(): Promise<string> {
+      const buf = new Uint8Array(4096);
+      const n = await conn.read(buf);
+      if (n === null) throw new Error("Connection closed");
+      return decoder.decode(buf.subarray(0, n));
+    }
+
+    async function sendCmd(cmd: string): Promise<string> {
+      await conn.write(encoder.encode(cmd + "\r\n"));
+      return await readResponse();
+    }
+
+    await readResponse();
+    await sendCmd(`EHLO localhost`);
+    await sendCmd(`AUTH LOGIN`);
+    await sendCmd(btoa(GMAIL_USER));
+    await sendCmd(btoa(gmailPassword));
+    await sendCmd(`MAIL FROM:<${GMAIL_USER}>`);
+    await sendCmd(`RCPT TO:<${session.candidate_email}>`);
+    await sendCmd(`DATA`);
+    await sendCmd(rawMessage + "\r\n.");
+    await sendCmd(`QUIT`);
+    conn.close();
 
     console.log(`Email sent to ${session.candidate_email}: ${score}/${total} (${percentage}%)`);
 
