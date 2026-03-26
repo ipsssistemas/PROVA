@@ -331,19 +331,6 @@ const AdminAccessCodes = () => {
               />
             </div>
 
-            <div>
-              <Label htmlFor="duration">Duração da Prova (minutos)</Label>
-              <Input
-                id="duration"
-                type="number"
-                min="10"
-                max="180"
-                value={form.durationMinutes}
-                onChange={(e) => setForm((f) => ({ ...f, durationMinutes: e.target.value }))}
-                className="mt-1"
-              />
-            </div>
-
             <div className="flex gap-2 pt-2">
               <Button onClick={handleCreate} disabled={creating} className="flex-1">
                 {creating ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Plus className="h-4 w-4 mr-1" />}
