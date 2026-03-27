@@ -3,8 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
 const GMAIL_USER = "ipsssistema@gmail.com";
@@ -13,35 +12,77 @@ function encodeBase64(str: string): string {
   return btoa(unescape(encodeURIComponent(str)));
 }
 
-function buildMimeMessage(
-  from: string,
-  to: string,
-  subject: string,
-  htmlBody: string
-): string {
-  const boundary = "boundary_" + crypto.randomUUID().replace(/-/g, "");
-  const lines = [
+function buildMimeMessage(from: string, to: string, subject: string, plainTextBody: string, htmlBody: string): string {
+  const boundary = `boundary_${crypto.randomUUID().replace(/-/g, "")}`;
+  const messageId = `<${crypto.randomUUID()}@gmail.com>`;
+
+  return [
     `From: ${from}`,
     `To: ${to}`,
     `Subject: =?UTF-8?B?${encodeBase64(subject)}?=`,
-    `MIME-Version: 1.0`,
-    `Content-Type: multipart/alternative; boundary="${boundary}"`,
-    ``,
+    `Date: ${new Date().toUTCString()}`,
+    `Message-ID: ${messageId}`,
+    "MIME-Version: 1.0",
+    `Content-Type: multipart/alternative; boundary=\"${boundary}\"`,
+    "",
     `--${boundary}`,
-    `Content-Type: text/plain; charset=UTF-8`,
-    `Content-Transfer-Encoding: base64`,
-    ``,
-    encodeBase64(`Resultado da sua avaliação técnica Smart Home Premium.`),
-    ``,
+    "Content-Type: text/plain; charset=UTF-8",
+    "Content-Transfer-Encoding: base64",
+    "",
+    encodeBase64(plainTextBody),
+    "",
     `--${boundary}`,
-    `Content-Type: text/html; charset=UTF-8`,
-    `Content-Transfer-Encoding: base64`,
-    ``,
+    "Content-Type: text/html; charset=UTF-8",
+    "Content-Transfer-Encoding: base64",
+    "",
     encodeBase64(htmlBody),
-    ``,
+    "",
     `--${boundary}--`,
-  ];
-  return lines.join("\r\n");
+    "",
+  ].join("\r\n");
+}
+
+async function readSmtpResponse(conn: Deno.Conn, decoder: TextDecoder): Promise<string> {
+  const buf = new Uint8Array(4096);
+  let response = "";
+
+  while (true) {
+    const n = await conn.read(buf);
+    if (n === null) {
+      throw new Error(`Conexão SMTP encerrada inesperadamente. Resposta parcial: ${response || "<vazia>"}`);
+    }
+
+    response += decoder.decode(buf.subarray(0, n));
+    const lines = response.split("\r\n").filter(Boolean);
+    const lastLine = lines[lines.length - 1];
+
+    if (lastLine && /^\d{3} /.test(lastLine)) {
+      return response;
+    }
+  }
+}
+
+function ensureSmtpCode(response: string, expectedCodes: string[], context: string) {
+  const trimmed = response.trim();
+  const matched = expectedCodes.some((code) => trimmed.startsWith(code));
+
+  if (!matched) {
+    throw new Error(`Falha no SMTP em ${context}: ${trimmed}`);
+  }
+}
+
+async function sendSmtpCommand(
+  conn: Deno.Conn,
+  encoder: TextEncoder,
+  decoder: TextDecoder,
+  command: string,
+  expectedCodes: string[],
+  context: string,
+) {
+  await conn.write(encoder.encode(`${command}\r\n`));
+  const response = await readSmtpResponse(conn, decoder);
+  ensureSmtpCode(response, expectedCodes, context);
+  return response;
 }
 
 serve(async (req) => {
@@ -51,10 +92,15 @@ serve(async (req) => {
 
   try {
     const { sessionId } = await req.json();
+    const gmailPassword = Deno.env.get("GMAIL_APP_PASSWORD");
+
+    if (!gmailPassword) {
+      throw new Error("Credencial de envio de e-mail não configurada.");
+    }
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
     const { data: session, error: sessionError } = await supabase
@@ -64,10 +110,15 @@ serve(async (req) => {
       .single();
 
     if (sessionError || !session) {
-      return new Response(
-        JSON.stringify({ error: "Session not found" }),
-        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return new Response(JSON.stringify({ error: "Session not found" }), {
+        status: 404,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const recipientEmail = String(session.candidate_email || "").trim().toLowerCase();
+    if (!recipientEmail) {
+      throw new Error("Sessão sem e-mail de candidato.");
     }
 
     const { data: answers } = await supabase
@@ -87,28 +138,41 @@ serve(async (req) => {
     const categoryMap: Record<string, { correct: number; total: number }> = {};
     if (answers && questions) {
       const questionCategoryMap: Record<number, string> = {};
-      questions.forEach((q: any) => { questionCategoryMap[q.id] = q.category; });
-      answers.forEach((a: any) => {
-        const cat = questionCategoryMap[a.question_id] || "Outros";
-        if (!categoryMap[cat]) categoryMap[cat] = { correct: 0, total: 0 };
-        categoryMap[cat].total++;
-        if (a.is_correct) categoryMap[cat].correct++;
+      questions.forEach((q: { id: number; category: string }) => {
+        questionCategoryMap[q.id] = q.category;
+      });
+
+      answers.forEach((answer: { is_correct: boolean; question_id: number }) => {
+        const category = questionCategoryMap[answer.question_id] || "Outros";
+        if (!categoryMap[category]) categoryMap[category] = { correct: 0, total: 0 };
+        categoryMap[category].total += 1;
+        if (answer.is_correct) categoryMap[category].correct += 1;
       });
     }
 
     let categoryRows = "";
-    for (const [cat, data] of Object.entries(categoryMap)) {
-      const catPct = Math.round((data.correct / data.total) * 100);
+    for (const [category, data] of Object.entries(categoryMap)) {
+      const categoryPct = Math.round((data.correct / data.total) * 100);
       categoryRows += `
         <tr>
-          <td style="padding: 8px 12px; border-bottom: 1px solid #e5e7eb;">${cat}</td>
+          <td style="padding: 8px 12px; border-bottom: 1px solid #e5e7eb;">${category}</td>
           <td style="padding: 8px 12px; border-bottom: 1px solid #e5e7eb; text-align: center;">${data.correct}/${data.total}</td>
-          <td style="padding: 8px 12px; border-bottom: 1px solid #e5e7eb; text-align: center;">${catPct}%</td>
+          <td style="padding: 8px 12px; border-bottom: 1px solid #e5e7eb; text-align: center;">${categoryPct}%</td>
         </tr>`;
     }
 
     const passColor = percentage >= 70 ? "#16a34a" : percentage >= 50 ? "#d97706" : "#dc2626";
     const passText = percentage >= 70 ? "APROVADO" : percentage >= 50 ? "EM ANÁLISE" : "NÃO APROVADO";
+
+    const plainTextBody = [
+      `Olá, ${session.candidate_name}!`,
+      "",
+      `Resultado: ${score}/${total} (${percentage}%)`,
+      `Status: ${passText}`,
+      `Situação da prova: ${status}`,
+      "",
+      "A equipe da Smart Home Premium entrará em contato em breve.",
+    ].join("\n");
 
     const htmlBody = `
 <!DOCTYPE html>
@@ -125,8 +189,8 @@ serve(async (req) => {
         <tr><td style="padding: 32px;">
           <p style="font-size:16px; color:#374151; margin:0 0 8px;">Olá, <strong>${session.candidate_name}</strong>!</p>
           <p style="font-size:14px; color:#6b7280; margin:0 0 24px;">
-            ${status === "Tempo esgotado" 
-              ? "O tempo da sua prova se encerrou. Veja abaixo o seu desempenho:" 
+            ${status === "Tempo esgotado"
+              ? "O tempo da sua prova se encerrou. Veja abaixo o seu desempenho:"
               : "Sua avaliação técnica foi concluída com sucesso. Confira o resultado:"}
           </p>
           <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fafb; border-radius:8px; border: 1px solid #e5e7eb; margin-bottom:24px;">
@@ -178,48 +242,36 @@ serve(async (req) => {
 
     const fromHeader = `Smart Home Premium <${GMAIL_USER}>`;
     const subject = `Resultado da Avaliação Técnica — ${score}/${total} (${percentage}%)`;
-    const rawMessage = buildMimeMessage(fromHeader, session.candidate_email, subject, htmlBody);
+    const rawMessage = buildMimeMessage(fromHeader, recipientEmail, subject, plainTextBody, htmlBody);
 
-    const gmailPassword = Deno.env.get("GMAIL_APP_PASSWORD")!;
     const conn = await Deno.connectTls({ hostname: "smtp.gmail.com", port: 465 });
     const encoder = new TextEncoder();
     const decoder = new TextDecoder();
 
-    async function readResponse(): Promise<string> {
-      const buf = new Uint8Array(4096);
-      const n = await conn.read(buf);
-      if (n === null) throw new Error("Connection closed");
-      return decoder.decode(buf.subarray(0, n));
-    }
-
-    async function sendCmd(cmd: string): Promise<string> {
-      await conn.write(encoder.encode(cmd + "\r\n"));
-      return await readResponse();
-    }
-
-    await readResponse();
-    await sendCmd(`EHLO localhost`);
-    await sendCmd(`AUTH LOGIN`);
-    await sendCmd(btoa(GMAIL_USER));
-    await sendCmd(btoa(gmailPassword));
-    await sendCmd(`MAIL FROM:<${GMAIL_USER}>`);
-    await sendCmd(`RCPT TO:<${session.candidate_email}>`);
-    await sendCmd(`DATA`);
-    await sendCmd(rawMessage + "\r\n.");
-    await sendCmd(`QUIT`);
+    const greeting = await readSmtpResponse(conn, decoder);
+    ensureSmtpCode(greeting, ["220"], "abertura da conexão");
+    await sendSmtpCommand(conn, encoder, decoder, "EHLO localhost", ["250"], "EHLO");
+    await sendSmtpCommand(conn, encoder, decoder, "AUTH LOGIN", ["334"], "AUTH LOGIN");
+    await sendSmtpCommand(conn, encoder, decoder, btoa(GMAIL_USER), ["334"], "usuário SMTP");
+    await sendSmtpCommand(conn, encoder, decoder, btoa(gmailPassword), ["235"], "senha SMTP");
+    await sendSmtpCommand(conn, encoder, decoder, `MAIL FROM:<${GMAIL_USER}>`, ["250"], "MAIL FROM");
+    await sendSmtpCommand(conn, encoder, decoder, `RCPT TO:<${recipientEmail}>`, ["250", "251"], "RCPT TO");
+    await sendSmtpCommand(conn, encoder, decoder, "DATA", ["354"], "DATA");
+    await sendSmtpCommand(conn, encoder, decoder, `${rawMessage}\r\n.`, ["250"], "envio da mensagem");
+    await sendSmtpCommand(conn, encoder, decoder, "QUIT", ["221"], "QUIT");
     conn.close();
 
-    console.log(`Email sent to ${session.candidate_email}: ${score}/${total} (${percentage}%)`);
+    console.log(`SMTP aceitou o e-mail de resultado para ${recipientEmail}`);
 
-    return new Response(
-      JSON.stringify({ success: true, message: "Email enviado", score, total, percentage }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return new Response(JSON.stringify({ success: true, message: "Email enviado", score, total, percentage }), {
+      status: 200,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   } catch (error) {
-    console.error("Error:", error);
-    return new Response(
-      JSON.stringify({ error: "Erro ao enviar email", details: String(error) }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    console.error("Erro no envio do resultado:", error);
+    return new Response(JSON.stringify({ error: "Erro ao enviar email", details: String(error) }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 });
