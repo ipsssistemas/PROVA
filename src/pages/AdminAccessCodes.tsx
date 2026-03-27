@@ -293,8 +293,8 @@ const AdminAccessCodes = () => {
                 <Input
                   id="code"
                   value={form.code}
-                  onChange={(e) => setForm((f) => ({ ...f, code: e.target.value.toUpperCase() }))}
-                  className="font-mono tracking-wider"
+                  readOnly
+                  className="font-mono tracking-wider bg-muted cursor-not-allowed"
                 />
                 <Button
                   variant="outline"
