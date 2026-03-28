@@ -1,52 +1,25 @@
 
-# Smart Home Premium — Plataforma de Prova Técnica
 
-## Visão Geral
-Plataforma de avaliação técnica para candidatos a técnicos de instalação de dispositivos inteligentes. O candidato acessa com nome e código, realiza uma prova de 30 perguntas com contagem regressiva, e recebe o resultado por e-mail.
+## Plano: Atualizar GMAIL_APP_PASSWORD e Revalidar Envio
 
----
+### Contexto
+As tentativas anteriores falharam com erro SMTP 535 (credenciais rejeitadas). A senha de app precisa ser gerada corretamente.
 
-## Tela de Acesso (sem login)
-- Campos: **Nome completo** e **Código de acesso**
-- O código será fornecido previamente pela empresa
-- Logo/nome "Smart Home Premium" no topo
-- Botão "Iniciar Prova"
+### Antes de prosseguir — Checklist obrigatório
 
-## Cabeçalho da Prova
-- Nome da empresa "Smart Home Premium"
-- Nome do candidato
-- **Contagem regressiva** (tempo restante) com destaque visual
-- Nota introdutória explicando o objetivo: avaliar o nível técnico avançado do candidato na instalação de dispositivos inteligentes
+Confirme que na conta `ipsssistema@gmail.com`:
+1. **Verificação em duas etapas** está **ATIVADA**
+2. A senha foi gerada em **myaccount.google.com/apppasswords**
+3. A senha tem **16 caracteres** (sem espaços)
+4. O app foi nomeado como quiser (ex: "Smart Home Premium")
 
-## Prova — 30 Perguntas Técnicas Avançadas
-Temas cobertos:
-- Interruptores Wi-Fi e Zigbee
-- Controlador universal (IR/RF)
-- Fechadura digital
-- Interfone inteligente
-- Fita de LED (instalação e controle)
-- Sensor de presença
-- Sensor de movimento
+### Passos
 
-Cada pergunta terá **até 5 opções de resposta** (múltipla escolha, uma correta). Navegação pergunta a pergunta. **Cada resposta é salva individualmente no banco** assim que respondida.
+1. **Atualizar a secret** `GMAIL_APP_PASSWORD` com a nova senha de 16 caracteres
+2. **Testar o envio** chamando a Edge Function `send-access-code` com dados de teste
+3. **Verificar os logs** da função para confirmar sucesso ou diagnosticar erro
 
-## Tempo Configurável
-- Tempo padrão: **45 minutos**
-- Possibilidade de configurar tempo máximo por prova
-- Ao fim do tempo: bloqueio total, modal de encerramento
+### Alternativa recomendada
 
-## Fim da Prova
-- Modal parabenizando o candidato
-- Mensagem: "O resultado será enviado por e-mail nos próximos minutos. A empresa entrará em contato."
+Se a senha continuar sendo rejeitada, posso migrar o envio de e-mails para a **infraestrutura nativa do Lovable Cloud**, eliminando a dependência do Gmail SMTP. Isso requer configurar um domínio de e-mail mas é mais confiável a longo prazo.
 
-## E-mail de Resultado
-- E-mail profissional com nota (X/30), percentual de acerto
-- Branding "Smart Home Premium"
-- Enviado automaticamente alguns minutos após a finalização
-
-## Backend (Supabase)
-- Tabela de códigos de acesso (para validar entrada)
-- Tabela de sessões de prova (candidato, início, fim, tempo configurado)
-- Tabela de respostas (salvas individualmente)
-- Tabela de perguntas e respostas corretas
-- Edge Function para envio de e-mail com resultado
