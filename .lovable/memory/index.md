@@ -11,7 +11,7 @@ Smart Home Premium - plataforma de prova técnica para técnicos de dispositivos
 - No auth for exam - access via name + code
 - Admin auth via email/password with user_roles table
 - Tables: questions, access_codes, exam_sessions, answers, user_roles, profiles
-- Edge function: send-exam-results
+- Edge functions: send-access-code, send-exam-results (ambas via Resend API)
 - Test access code: TESTE2024 (email: teste@smarthomepremium.com)
 - Admin: Steevenadeau13@gmail.com / Admin2024!
 
