@@ -6,84 +6,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const GMAIL_USER = "ipsssistema@gmail.com";
-
-function encodeBase64(str: string): string {
-  return btoa(unescape(encodeURIComponent(str)));
-}
-
-function buildMimeMessage(from: string, to: string, subject: string, plainTextBody: string, htmlBody: string): string {
-  const boundary = `boundary_${crypto.randomUUID().replace(/-/g, "")}`;
-  const messageId = `<${crypto.randomUUID()}@gmail.com>`;
-
-  return [
-    `From: ${from}`,
-    `To: ${to}`,
-    `Subject: =?UTF-8?B?${encodeBase64(subject)}?=`,
-    `Date: ${new Date().toUTCString()}`,
-    `Message-ID: ${messageId}`,
-    "MIME-Version: 1.0",
-    `Content-Type: multipart/alternative; boundary=\"${boundary}\"`,
-    "",
-    `--${boundary}`,
-    "Content-Type: text/plain; charset=UTF-8",
-    "Content-Transfer-Encoding: base64",
-    "",
-    encodeBase64(plainTextBody),
-    "",
-    `--${boundary}`,
-    "Content-Type: text/html; charset=UTF-8",
-    "Content-Transfer-Encoding: base64",
-    "",
-    encodeBase64(htmlBody),
-    "",
-    `--${boundary}--`,
-    "",
-  ].join("\r\n");
-}
-
-async function readSmtpResponse(conn: Deno.Conn, decoder: TextDecoder): Promise<string> {
-  const buf = new Uint8Array(4096);
-  let response = "";
-
-  while (true) {
-    const n = await conn.read(buf);
-    if (n === null) {
-      throw new Error(`Conexão SMTP encerrada inesperadamente. Resposta parcial: ${response || "<vazia>"}`);
-    }
-
-    response += decoder.decode(buf.subarray(0, n));
-    const lines = response.split("\r\n").filter(Boolean);
-    const lastLine = lines[lines.length - 1];
-
-    if (lastLine && /^\d{3} /.test(lastLine)) {
-      return response;
-    }
-  }
-}
-
-function ensureSmtpCode(response: string, expectedCodes: string[], context: string) {
-  const trimmed = response.trim();
-  const matched = expectedCodes.some((code) => trimmed.startsWith(code));
-
-  if (!matched) {
-    throw new Error(`Falha no SMTP em ${context}: ${trimmed}`);
-  }
-}
-
-async function sendSmtpCommand(
-  conn: Deno.Conn,
-  encoder: TextEncoder,
-  decoder: TextDecoder,
-  command: string,
-  expectedCodes: string[],
-  context: string,
-) {
-  await conn.write(encoder.encode(`${command}\r\n`));
-  const response = await readSmtpResponse(conn, decoder);
-  ensureSmtpCode(response, expectedCodes, context);
-  return response;
-}
+const FROM_EMAIL = "Smart Home Premium <onboarding@resend.dev>";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -92,10 +15,10 @@ serve(async (req) => {
 
   try {
     const { sessionId } = await req.json();
-    const gmailPassword = Deno.env.get("GMAIL_APP_PASSWORD");
+    const resendApiKey = Deno.env.get("RESEND_API_KEY");
 
-    if (!gmailPassword) {
-      throw new Error("Credencial de envio de e-mail não configurada.");
+    if (!resendApiKey) {
+      throw new Error("RESEND_API_KEY não configurada.");
     }
 
     const supabase = createClient(
@@ -164,16 +87,6 @@ serve(async (req) => {
     const passColor = percentage >= 70 ? "#16a34a" : percentage >= 50 ? "#d97706" : "#dc2626";
     const passText = percentage >= 70 ? "APROVADO" : percentage >= 50 ? "EM ANÁLISE" : "NÃO APROVADO";
 
-    const plainTextBody = [
-      `Olá, ${session.candidate_name}!`,
-      "",
-      `Resultado: ${score}/${total} (${percentage}%)`,
-      `Status: ${passText}`,
-      `Situação da prova: ${status}`,
-      "",
-      "A equipe da Smart Home Premium entrará em contato em breve.",
-    ].join("\n");
-
     const htmlBody = `
 <!DOCTYPE html>
 <html>
@@ -240,28 +153,30 @@ serve(async (req) => {
 </body>
 </html>`;
 
-    const fromHeader = `Smart Home Premium <${GMAIL_USER}>`;
     const subject = `Resultado da Avaliação Técnica — ${score}/${total} (${percentage}%)`;
-    const rawMessage = buildMimeMessage(fromHeader, recipientEmail, subject, plainTextBody, htmlBody);
 
-    const conn = await Deno.connectTls({ hostname: "smtp.gmail.com", port: 465 });
-    const encoder = new TextEncoder();
-    const decoder = new TextDecoder();
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${resendApiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from: FROM_EMAIL,
+        to: [recipientEmail],
+        subject,
+        html: htmlBody,
+      }),
+    });
 
-    const greeting = await readSmtpResponse(conn, decoder);
-    ensureSmtpCode(greeting, ["220"], "abertura da conexão");
-    await sendSmtpCommand(conn, encoder, decoder, "EHLO localhost", ["250"], "EHLO");
-    await sendSmtpCommand(conn, encoder, decoder, "AUTH LOGIN", ["334"], "AUTH LOGIN");
-    await sendSmtpCommand(conn, encoder, decoder, btoa(GMAIL_USER), ["334"], "usuário SMTP");
-    await sendSmtpCommand(conn, encoder, decoder, btoa(gmailPassword), ["235"], "senha SMTP");
-    await sendSmtpCommand(conn, encoder, decoder, `MAIL FROM:<${GMAIL_USER}>`, ["250"], "MAIL FROM");
-    await sendSmtpCommand(conn, encoder, decoder, `RCPT TO:<${recipientEmail}>`, ["250", "251"], "RCPT TO");
-    await sendSmtpCommand(conn, encoder, decoder, "DATA", ["354"], "DATA");
-    await sendSmtpCommand(conn, encoder, decoder, `${rawMessage}\r\n.`, ["250"], "envio da mensagem");
-    await sendSmtpCommand(conn, encoder, decoder, "QUIT", ["221"], "QUIT");
-    conn.close();
+    const resData = await res.json();
 
-    console.log(`SMTP aceitou o e-mail de resultado para ${recipientEmail}`);
+    if (!res.ok) {
+      console.error("Resend error:", resData);
+      throw new Error(`Resend API error: ${JSON.stringify(resData)}`);
+    }
+
+    console.log(`Email de resultado enviado para ${recipientEmail} via Resend`);
 
     return new Response(JSON.stringify({ success: true, message: "Email enviado", score, total, percentage }), {
       status: 200,
