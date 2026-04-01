@@ -61,13 +61,36 @@ const Exam = () => {
 
       setSession(sess as Session);
 
-      const { data: qs } = await supabase
-        .from("questions")
-        .select("*")
-        .order("id")
-        .limit(30);
+      // Load questions assigned to this session
+      const { data: sessionQs } = await supabase
+        .from("exam_session_questions")
+        .select("question_id, question_order")
+        .eq("session_id", sessionId)
+        .order("question_order");
 
-      setQuestions((qs as Question[]) || []);
+      if (sessionQs && sessionQs.length > 0) {
+        const questionIds = sessionQs.map((sq: any) => sq.question_id);
+        const { data: qs } = await supabase
+          .from("questions")
+          .select("*")
+          .in("id", questionIds);
+
+        // Sort by the order defined in exam_session_questions
+        const orderMap = new Map(sessionQs.map((sq: any) => [sq.question_id, sq.question_order]));
+        const sorted = (qs || []).sort((a: any, b: any) => 
+          (orderMap.get(a.id) || 0) - (orderMap.get(b.id) || 0)
+        );
+        setQuestions(sorted as Question[]);
+      } else {
+        // Fallback for old sessions without assigned questions
+        const { data: qs } = await supabase
+          .from("questions")
+          .select("*")
+          .order("id")
+          .limit(30);
+        setQuestions((qs as Question[]) || []);
+      }
+
 
       // Load existing answers
       const { data: existingAnswers } = await supabase

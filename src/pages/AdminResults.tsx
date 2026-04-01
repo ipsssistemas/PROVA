@@ -8,7 +8,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend,
 } from "recharts";
-import { LogOut, Users, Trophy, Clock, ChevronDown, ChevronUp, KeyRound } from "lucide-react";
+import { LogOut, Users, Trophy, Clock, ChevronDown, ChevronUp, KeyRound, BookOpen } from "lucide-react";
 
 interface ExamSession {
   id: string;
@@ -173,6 +173,9 @@ const AdminResults = () => {
             <p className="text-xs text-muted-foreground">Painel de Resultados</p>
           </div>
           <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => navigate("/admin/questions")}>
+              <BookOpen className="h-4 w-4 mr-1" /> Perguntas
+            </Button>
             <Button variant="outline" size="sm" onClick={() => navigate("/admin/codes")}>
               <KeyRound className="h-4 w-4 mr-1" /> Códigos
             </Button>

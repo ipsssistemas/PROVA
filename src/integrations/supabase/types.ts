@@ -86,6 +86,42 @@ export type Database = {
           },
         ]
       }
+      exam_session_questions: {
+        Row: {
+          id: string
+          question_id: number
+          question_order: number
+          session_id: string
+        }
+        Insert: {
+          id?: string
+          question_id: number
+          question_order: number
+          session_id: string
+        }
+        Update: {
+          id?: string
+          question_id?: number
+          question_order?: number
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exam_session_questions_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exam_session_questions_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "exam_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       exam_sessions: {
         Row: {
           access_code_id: string | null
