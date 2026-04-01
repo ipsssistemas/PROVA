@@ -108,6 +108,18 @@ const Index = () => {
         return;
       }
 
+      // Select 30 random questions for demo
+      const { data: allQuestions } = await supabase.from("questions").select("id");
+      if (allQuestions && allQuestions.length >= 30) {
+        const shuffled = allQuestions.sort(() => Math.random() - 0.5).slice(0, 30);
+        const sessionQuestions = shuffled.map((q: any, i: number) => ({
+          session_id: session.id,
+          question_id: q.id,
+          question_order: i + 1,
+        }));
+        await supabase.from("exam_session_questions").insert(sessionQuestions);
+      }
+
       navigate(`/exam/${session.id}`);
     } catch {
       toast({ title: "Erro de conexão", variant: "destructive" });
