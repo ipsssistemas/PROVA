@@ -8,7 +8,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend,
 } from "recharts";
-import { LogOut, Users, Trophy, Clock, ChevronDown, ChevronUp, KeyRound } from "lucide-react";
+import { LogOut, Users, Trophy, Clock, ChevronDown, ChevronUp, KeyRound, BookOpen } from "lucide-react";
 
 interface ExamSession {
   id: string;
