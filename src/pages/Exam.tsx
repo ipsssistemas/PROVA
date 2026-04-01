@@ -91,7 +91,6 @@ const Exam = () => {
         setQuestions((qs as Question[]) || []);
       }
 
-      setQuestions((qs as Question[]) || []);
 
       // Load existing answers
       const { data: existingAnswers } = await supabase
