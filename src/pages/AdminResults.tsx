@@ -173,6 +173,9 @@ const AdminResults = () => {
             <p className="text-xs text-muted-foreground">Painel de Resultados</p>
           </div>
           <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => navigate("/admin/questions")}>
+              <BookOpen className="h-4 w-4 mr-1" /> Perguntas
+            </Button>
             <Button variant="outline" size="sm" onClick={() => navigate("/admin/codes")}>
               <KeyRound className="h-4 w-4 mr-1" /> Códigos
             </Button>
