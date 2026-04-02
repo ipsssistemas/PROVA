@@ -50,7 +50,7 @@ const AdminAccessCodes = () => {
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
   const [creating, setCreating] = useState(false);
-  const [sendingEmail, setSendingEmail] = useState<string | null>(null);
+  
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [form, setForm] = useState({
     candidateName: "",
