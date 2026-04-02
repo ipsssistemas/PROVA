@@ -277,6 +277,9 @@ const AdminQuestions = () => {
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
+                      <Badge className="text-xs shrink-0 bg-primary/10 text-primary border-primary/20">
+                        #{q.id}
+                      </Badge>
                       <Badge variant="outline" className="text-xs shrink-0">{q.category}</Badge>
                       <Badge variant="secondary" className="text-xs shrink-0">
                         Resp: {q.correct_option.toUpperCase()}
