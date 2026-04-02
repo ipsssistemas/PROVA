@@ -5,7 +5,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { CheckCircle, Mail, Phone } from "lucide-react";
+import { CheckCircle, Phone } from "lucide-react";
 
 interface ExamCompletionModalProps {
   open: boolean;
@@ -32,12 +32,8 @@ const ExamCompletionModal = ({ open, candidateName, timedOut }: ExamCompletionMo
                 : " Você completou a avaliação técnica."}
             </p>
             <div className="flex items-center gap-2 justify-center text-sm text-muted-foreground">
-              <Mail className="h-4 w-4" />
-              <span>O resultado será enviado por e-mail nos próximos minutos.</span>
-            </div>
-            <div className="flex items-center gap-2 justify-center text-sm text-muted-foreground">
               <Phone className="h-4 w-4" />
-              <span>A equipe Smart Home Premium entrará em contato com você.</span>
+              <span>O resultado será enviado pela equipe administrativa da Smart Home Premium.</span>
             </div>
             <p className="text-xs text-muted-foreground pt-2 border-t">
               Agradecemos sua participação neste processo seletivo.

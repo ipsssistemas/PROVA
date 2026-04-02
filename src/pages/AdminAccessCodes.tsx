@@ -17,7 +17,7 @@ import {
 import {
   LogOut,
   Plus,
-  Send,
+  
   Trash2,
   KeyRound,
   ArrowLeft,
@@ -50,7 +50,7 @@ const AdminAccessCodes = () => {
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
   const [creating, setCreating] = useState(false);
-  const [sendingEmail, setSendingEmail] = useState<string | null>(null);
+  
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [form, setForm] = useState({
     candidateName: "",
@@ -118,25 +118,6 @@ const AdminAccessCodes = () => {
     await loadCodes();
   };
 
-  const handleSendEmail = async (code: AccessCode) => {
-    setSendingEmail(code.id);
-    try {
-      const { data, error } = await supabase.functions.invoke("send-access-code", {
-        body: {
-          candidateName: code.candidate_name,
-          candidateEmail: code.candidate_email,
-          accessCode: code.code,
-          durationMinutes: code.exam_duration_minutes,
-        },
-      });
-
-      if (error) throw error;
-      toast({ title: "E-mail enviado!", description: `Código enviado para ${code.candidate_email}` });
-    } catch (err: any) {
-      toast({ title: "Erro ao enviar e-mail", description: err.message, variant: "destructive" });
-    }
-    setSendingEmail(null);
-  };
 
   const handleDelete = async (id: string) => {
     const { error } = await supabase.from("access_codes").delete().eq("id", id);
@@ -234,19 +215,6 @@ const AdminAccessCodes = () => {
                   </div>
 
                   <div className="flex gap-1.5 shrink-0">
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => handleSendEmail(code)}
-                      disabled={sendingEmail === code.id}
-                      title="Enviar código por e-mail"
-                    >
-                      {sendingEmail === code.id ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <Send className="h-4 w-4" />
-                      )}
-                    </Button>
                     <Button
                       variant="outline"
                       size="icon"

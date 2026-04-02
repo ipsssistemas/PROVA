@@ -170,14 +170,7 @@ const Exam = () => {
       })
       .eq("id", sessionId);
 
-    // Trigger email (will be handled by edge function later)
-    try {
-      await supabase.functions.invoke("send-exam-results", {
-        body: { sessionId },
-      });
-    } catch {
-      // Email will be sent later
-    }
+    // Resultado será enviado manualmente pela equipe administrativa
   };
 
   const handleTimeUp = () => {
