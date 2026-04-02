@@ -280,6 +280,7 @@ const AdminResults = () => {
                      Ver Prova
                    </Button>
                    {expandedSession === session.id ? <ChevronUp className="h-5 w-5 text-muted-foreground" /> : <ChevronDown className="h-5 w-5 text-muted-foreground" />}
+                 </div>
               </button>
 
               {expandedSession === session.id && sessionAnswers[session.id] && (
