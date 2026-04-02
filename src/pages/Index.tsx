@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Shield, LogIn, Play } from "lucide-react";
+import { Shield, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
