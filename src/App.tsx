@@ -9,6 +9,7 @@ import AdminLogin from "./pages/AdminLogin.tsx";
 import AdminResults from "./pages/AdminResults.tsx";
 import AdminAccessCodes from "./pages/AdminAccessCodes.tsx";
 import AdminQuestions from "./pages/AdminQuestions.tsx";
+import AdminExamReview from "./pages/AdminExamReview.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
