@@ -93,7 +93,6 @@ const AdminQuestions = () => {
     const { data } = await supabase
       .from("questions")
       .select("*")
-      .order("category")
       .order("id");
     setQuestions((data as Question[]) || []);
     setLoading(false);
