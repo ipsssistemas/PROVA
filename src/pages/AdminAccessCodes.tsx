@@ -17,7 +17,7 @@ import {
 import {
   LogOut,
   Plus,
-  Send,
+  
   Trash2,
   KeyRound,
   ArrowLeft,
