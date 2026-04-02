@@ -5,7 +5,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { CheckCircle, Mail, Phone } from "lucide-react";
+import { CheckCircle, Phone } from "lucide-react";
 
 interface ExamCompletionModalProps {
   open: boolean;
