@@ -118,25 +118,6 @@ const AdminAccessCodes = () => {
     await loadCodes();
   };
 
-  const handleSendEmail = async (code: AccessCode) => {
-    setSendingEmail(code.id);
-    try {
-      const { data, error } = await supabase.functions.invoke("send-access-code", {
-        body: {
-          candidateName: code.candidate_name,
-          candidateEmail: code.candidate_email,
-          accessCode: code.code,
-          durationMinutes: code.exam_duration_minutes,
-        },
-      });
-
-      if (error) throw error;
-      toast({ title: "E-mail enviado!", description: `Código enviado para ${code.candidate_email}` });
-    } catch (err: any) {
-      toast({ title: "Erro ao enviar e-mail", description: err.message, variant: "destructive" });
-    }
-    setSendingEmail(null);
-  };
 
   const handleDelete = async (id: string) => {
     const { error } = await supabase.from("access_codes").delete().eq("id", id);
