@@ -218,19 +218,6 @@ const AdminAccessCodes = () => {
                     <Button
                       variant="outline"
                       size="icon"
-                      onClick={() => handleSendEmail(code)}
-                      disabled={sendingEmail === code.id}
-                      title="Enviar código por e-mail"
-                    >
-                      {sendingEmail === code.id ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <Send className="h-4 w-4" />
-                      )}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="icon"
                       onClick={() => handleDelete(code.id)}
                       className="text-destructive hover:text-destructive"
                       title="Excluir código"
