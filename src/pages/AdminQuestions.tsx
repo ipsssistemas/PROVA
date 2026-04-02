@@ -327,9 +327,9 @@ const AdminQuestions = () => {
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
         <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editingId ? "Editar Pergunta" : "Nova Pergunta"}</DialogTitle>
+            <DialogTitle>{editingId ? `Editar Pergunta #${editingId}` : "Nova Pergunta"}</DialogTitle>
             <DialogDescription>
-              {editingId ? "Atualize os campos da pergunta." : "Preencha os dados da nova pergunta."}
+              {editingId ? "Atualize os campos da pergunta. O número da pergunta não será alterado." : "Preencha os dados da nova pergunta."}
             </DialogDescription>
           </DialogHeader>
 
