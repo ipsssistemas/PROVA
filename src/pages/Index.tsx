@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Shield, LogIn, Play } from "lucide-react";
+import { Shield, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -88,45 +88,6 @@ const Index = () => {
     }
   };
 
-  const handleDemo = async () => {
-    setLoading(true);
-    try {
-      const { data: session, error } = await supabase
-        .from("exam_sessions")
-        .insert({
-          access_code_id: null as any,
-          candidate_name: "Modo Demonstração",
-          candidate_email: "demo@smarthomepremium.com",
-          duration_minutes: 45,
-        })
-        .select()
-        .single();
-
-      if (error || !session) {
-        toast({ title: "Erro ao iniciar demonstração", variant: "destructive" });
-        setLoading(false);
-        return;
-      }
-
-      // Select 30 random questions for demo
-      const { data: allQuestions } = await supabase.from("questions").select("id");
-      if (allQuestions && allQuestions.length >= 30) {
-        const shuffled = allQuestions.sort(() => Math.random() - 0.5).slice(0, 30);
-        const sessionQuestions = shuffled.map((q: any, i: number) => ({
-          session_id: session.id,
-          question_id: q.id,
-          question_order: i + 1,
-        }));
-        await supabase.from("exam_session_questions").insert(sessionQuestions);
-      }
-
-      navigate(`/exam/${session.id}`);
-    } catch {
-      toast({ title: "Erro de conexão", variant: "destructive" });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-background">
@@ -184,11 +145,11 @@ const Index = () => {
             variant="outline"
             className="w-full"
             size="lg"
-            onClick={handleDemo}
+            onClick={() => navigate("/admin")}
             disabled={loading}
           >
-            <Play className="h-4 w-4 mr-2" />
-            Iniciar Prova Demonstração
+            <Shield className="h-4 w-4 mr-2" />
+            Entrar como Administrador
           </Button>
 
           <p className="text-xs text-center text-muted-foreground">

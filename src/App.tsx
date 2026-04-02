@@ -9,6 +9,7 @@ import AdminLogin from "./pages/AdminLogin.tsx";
 import AdminResults from "./pages/AdminResults.tsx";
 import AdminAccessCodes from "./pages/AdminAccessCodes.tsx";
 import AdminQuestions from "./pages/AdminQuestions.tsx";
+import AdminExamReview from "./pages/AdminExamReview.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -26,6 +27,7 @@ const App = () => (
           <Route path="/admin/results" element={<AdminResults />} />
           <Route path="/admin/codes" element={<AdminAccessCodes />} />
           <Route path="/admin/questions" element={<AdminQuestions />} />
+          <Route path="/admin/review/:sessionId" element={<AdminExamReview />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
