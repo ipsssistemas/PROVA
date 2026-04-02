@@ -145,11 +145,11 @@ const Index = () => {
             variant="outline"
             className="w-full"
             size="lg"
-            onClick={handleDemo}
+            onClick={() => navigate("/admin")}
             disabled={loading}
           >
-            <Play className="h-4 w-4 mr-2" />
-            Iniciar Prova Demonstração
+            <Shield className="h-4 w-4 mr-2" />
+            Entrar como Administrador
           </Button>
 
           <p className="text-xs text-center text-muted-foreground">
