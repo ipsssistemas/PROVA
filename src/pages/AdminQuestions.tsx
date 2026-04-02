@@ -93,7 +93,6 @@ const AdminQuestions = () => {
     const { data } = await supabase
       .from("questions")
       .select("*")
-      .order("category")
       .order("id");
     setQuestions((data as Question[]) || []);
     setLoading(false);
@@ -278,6 +277,9 @@ const AdminQuestions = () => {
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
+                      <Badge className="text-xs shrink-0 bg-primary/10 text-primary border-primary/20">
+                        #{q.id}
+                      </Badge>
                       <Badge variant="outline" className="text-xs shrink-0">{q.category}</Badge>
                       <Badge variant="secondary" className="text-xs shrink-0">
                         Resp: {q.correct_option.toUpperCase()}
@@ -325,9 +327,9 @@ const AdminQuestions = () => {
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
         <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editingId ? "Editar Pergunta" : "Nova Pergunta"}</DialogTitle>
+            <DialogTitle>{editingId ? `Editar Pergunta #${editingId}` : "Nova Pergunta"}</DialogTitle>
             <DialogDescription>
-              {editingId ? "Atualize os campos da pergunta." : "Preencha os dados da nova pergunta."}
+              {editingId ? "Atualize os campos da pergunta. O número da pergunta não será alterado." : "Preencha os dados da nova pergunta."}
             </DialogDescription>
           </DialogHeader>
 
