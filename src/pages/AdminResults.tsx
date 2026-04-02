@@ -265,12 +265,21 @@ const AdminResults = () => {
                     {getStatusBadge(session.status)}
                   </div>
                   <p className="text-xs text-muted-foreground mt-1 truncate">{session.candidate_email}</p>
-                  <div className="flex gap-3 mt-1 text-xs text-muted-foreground">
-                    <span>Nota: {session.score ?? "—"}/{session.total_questions}</span>
-                    <span>{new Date(session.started_at).toLocaleDateString("pt-BR")} {new Date(session.started_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</span>
-                  </div>
-                </div>
-                {expandedSession === session.id ? <ChevronUp className="h-5 w-5 text-muted-foreground" /> : <ChevronDown className="h-5 w-5 text-muted-foreground" />}
+                   <div className="flex gap-3 mt-1 text-xs text-muted-foreground">
+                     <span>Nota: {session.score ?? "—"}/{session.total_questions}</span>
+                     <span>{new Date(session.started_at).toLocaleDateString("pt-BR")} {new Date(session.started_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</span>
+                   </div>
+                 </div>
+                 <div className="flex items-center gap-2">
+                   <Button
+                     variant="outline"
+                     size="sm"
+                     onClick={(e) => { e.stopPropagation(); navigate(`/admin/review/${session.id}`); }}
+                   >
+                     <Eye className="h-4 w-4 mr-1" />
+                     Ver Prova
+                   </Button>
+                   {expandedSession === session.id ? <ChevronUp className="h-5 w-5 text-muted-foreground" /> : <ChevronDown className="h-5 w-5 text-muted-foreground" />}
               </button>
 
               {expandedSession === session.id && sessionAnswers[session.id] && (
