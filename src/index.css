@@ -1,8 +1,8 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap');
 
 @layer base {
   :root {
@@ -101,5 +101,342 @@
 
   h1, h2, h3 {
     font-family: 'Space Grotesk', sans-serif;
+  }
+}
+
+/* Dashboard Premium — painel administrativo */
+.dashboard-shell {
+  color: #eaf4ff;
+  background:
+    radial-gradient(ellipse at 50% -15%, rgba(28, 105, 160, .34), transparent 52%),
+    linear-gradient(135deg, #071321 0%, #0b1d30 48%, #081522 100%);
+  isolation: isolate;
+}
+.dashboard-shell::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: .16;
+  background-image: linear-gradient(rgba(148, 190, 220, .08) 1px, transparent 1px), linear-gradient(90deg, rgba(148, 190, 220, .08) 1px, transparent 1px);
+  background-size: 42px 42px;
+  mask-image: linear-gradient(to bottom, black, transparent 82%);
+}
+.dashboard-header {
+  background: rgba(5, 17, 30, .88);
+  border-bottom: 1px solid rgba(125, 190, 230, .22);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .24);
+  backdrop-filter: blur(18px);
+}
+.dashboard-header h1 { color: #f4faff; }
+.dashboard-header p { color: #9bb5ca !important; }
+.dashboard-header button {
+  color: #dceeff;
+  border-color: rgba(129, 190, 229, .32);
+  background: linear-gradient(145deg, rgba(29, 65, 94, .95), rgba(12, 34, 54, .98));
+  box-shadow: 0 4px 0 rgba(3, 12, 22, .72), 0 8px 18px rgba(0, 0, 0, .22), inset 0 1px 0 rgba(255,255,255,.12);
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+.dashboard-header button:hover {
+  color: white;
+  border-color: rgba(95, 190, 255, .75);
+  background: linear-gradient(145deg, #24577e, #102d49);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 0 rgba(3, 12, 22, .7), 0 12px 22px rgba(0, 0, 0, .28);
+}
+.dashboard-card {
+  color: #eaf4ff !important;
+  border: 1px solid rgba(119, 177, 215, .23) !important;
+  border-radius: 16px !important;
+  background: linear-gradient(145deg, rgba(25, 53, 77, .98), rgba(11, 29, 47, .98)) !important;
+  box-shadow: 0 7px 0 rgba(2, 11, 20, .48), 0 15px 30px rgba(0, 0, 0, .24), inset 0 1px 0 rgba(255,255,255,.09) !important;
+  transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+}
+.dashboard-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(90, 180, 240, .42) !important;
+  box-shadow: 0 9px 0 rgba(2, 11, 20, .48), 0 20px 34px rgba(0, 0, 0, .28), inset 0 1px 0 rgba(255,255,255,.12) !important;
+}
+.dashboard-card .text-muted-foreground { color: #a9c1d5 !important; }
+.dashboard-card .text-2xl, .dashboard-card h2, .dashboard-card h3 { color: #f2f8ff; }
+.dashboard-card button:hover { background: rgba(82, 155, 205, .13); }
+.dashboard-card .border-t { border-color: rgba(133, 183, 216, .2); }
+.dashboard-content > div > h2 { color: #eaf4ff; }
+.dashboard-side-left {
+  position: absolute;
+  z-index: 1;
+  left: max(22px, calc((100vw - 1500px) / 2 - 175px));
+  top: 190px;
+  width: 155px;
+  min-height: 560px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  border-right: 1px solid rgba(117, 183, 224, .18);
+}
+.dashboard-side-title {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: clamp(54px, 5.2vw, 88px);
+  line-height: .9;
+  letter-spacing: .12em;
+  font-weight: 700;
+  color: rgba(167, 211, 241, .19);
+  text-shadow: 0 0 35px rgba(54, 158, 224, .12);
+}
+.dashboard-side-subtitle {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  color: rgba(194, 220, 239, .58);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .28em;
+}
+.dashboard-side-right {
+  position: absolute;
+  z-index: 0;
+  pointer-events: none;
+  right: max(18px, calc((100vw - 1500px) / 2 - 190px));
+  top: 180px;
+  width: 300px;
+  height: 560px;
+  background: url('/smart-home-watermark.svg') center center / contain no-repeat;
+  opacity: .22;
+  filter: drop-shadow(0 0 28px rgba(72, 166, 225, .2));
+}
+@media (max-width: 1535px) {
+  .dashboard-side-left, .dashboard-side-right { display: none !important; }
+}
+@media (max-width: 700px) {
+  .dashboard-header > div { align-items: flex-start; gap: 12px; flex-direction: column; }
+  .dashboard-header > div > div:last-child { flex-wrap: wrap; }
+  .dashboard-content { padding-top: 18px; }
+}
+
+/* Ajuste tipográfico lateral solicitado */
+.dashboard-side-left {
+  width: 205px;
+  left: max(18px, calc((100vw - 1500px) / 2 - 225px));
+  align-items: stretch;
+  justify-content: center;
+  gap: 10px;
+}
+.dashboard-side-title {
+  font-size: clamp(82px, 7.2vw, 128px);
+  letter-spacing: .08em;
+  color: rgba(177, 218, 246, .23);
+  text-shadow: 0 0 42px rgba(54, 158, 224, .18);
+}
+.dashboard-side-subtitle {
+  writing-mode: horizontal-tb;
+  transform: none;
+  align-self: flex-end;
+  width: 100%;
+  text-align: right;
+  color: rgba(204, 229, 247, .72);
+  font-size: clamp(15px, 1.15vw, 20px);
+  letter-spacing: .13em;
+  line-height: 1.2;
+  white-space: nowrap;
+  margin-right: 4px;
+}
+
+/* CASA INTELIGENTE também na vertical, abaixo de PROVAS */
+.dashboard-side-left {
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+}
+.dashboard-side-subtitle {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  align-self: center;
+  width: auto;
+  text-align: left;
+  font-size: clamp(18px, 1.55vw, 26px);
+  letter-spacing: .18em;
+  line-height: 1.1;
+  white-space: nowrap;
+  margin-right: 0;
+}
+
+/* Composição final: marca vertical lado a lado e fotografia integrada ao fundo */
+.dashboard-side-left {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  width: 205px;
+  min-height: 560px;
+  left: max(18px, calc((100vw - 1500px) / 2 - 225px));
+  border-right: 1px solid rgba(117, 183, 224, .18);
+}
+.dashboard-side-title {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  font-size: clamp(82px, 7.2vw, 128px);
+  letter-spacing: .08em;
+}
+.dashboard-side-subtitle {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  align-self: center;
+  width: auto;
+  text-align: center;
+  font-size: clamp(18px, 1.55vw, 26px);
+  letter-spacing: .18em;
+  line-height: 1.1;
+  white-space: nowrap;
+  margin: 0;
+}
+.dashboard-side-right {
+  position: absolute;
+  z-index: 0;
+  pointer-events: none;
+  inset: 0 0 0 auto;
+  width: min(62%, 1120px);
+  height: 100%;
+  background-image:
+    linear-gradient(90deg, #081522 0%, rgba(8, 21, 34, .88) 8%, rgba(8, 21, 34, .45) 34%, rgba(8, 21, 34, .12) 70%),
+    linear-gradient(0deg, rgba(5, 16, 28, .56), transparent 35%, rgba(5, 16, 28, .16)),
+    url('/casaIntelg.png');
+  background-position: center, center, center right;
+  background-size: cover, cover, cover;
+  background-repeat: no-repeat;
+  opacity: .82;
+  filter: saturate(.92) contrast(1.04);
+  -webkit-mask-image: linear-gradient(90deg, transparent 0%, black 20%);
+  mask-image: linear-gradient(90deg, transparent 0%, black 20%);
+}
+@media (max-width: 1535px) {
+  .dashboard-side-left { display: none !important; }
+  .dashboard-side-right { display: block !important; width: 58%; opacity: .38; }
+}
+@media (max-width: 900px) {
+  .dashboard-side-right { width: 100%; opacity: .2; }
+}
+
+/* Reduzir o brilho da fotografia integrada ao fundo */
+.dashboard-side-right {
+  opacity: .42;
+  filter: brightness(.68) saturate(.82) contrast(1.02);
+}
+@media (max-width: 1535px) {
+  .dashboard-side-right {
+    opacity: .24;
+    filter: brightness(.68) saturate(.82) contrast(1.02);
+  }
+}
+
+/* Identidade visual compartilhada das telas */
+.brand-screen {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background: #081522;
+}
+.brand-screen > :not(.brand-backdrop) {
+  position: relative;
+  z-index: 1;
+}
+.brand-backdrop {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.brand-backdrop-photo {
+  position: absolute;
+  inset: 0 0 0 auto;
+  width: min(62%, 1120px);
+  height: 100%;
+  background-image:
+    linear-gradient(90deg, #081522 0%, rgba(8, 21, 34, .9) 9%, rgba(8, 21, 34, .48) 38%, rgba(8, 21, 34, .16) 78%),
+    linear-gradient(0deg, rgba(5, 16, 28, .62), transparent 38%, rgba(5, 16, 28, .2)),
+    url('/casaIntelg.png');
+  background-position: center, center, center right;
+  background-size: cover, cover, cover;
+  background-repeat: no-repeat;
+  opacity: .42;
+  filter: brightness(.68) saturate(.82) contrast(1.02);
+  -webkit-mask-image: linear-gradient(90deg, transparent 0%, black 20%);
+  mask-image: linear-gradient(90deg, transparent 0%, black 20%);
+}
+.brand-backdrop-rail {
+  position: absolute;
+  top: 50%;
+  left: max(18px, calc((100vw - 1500px) / 2 - 225px));
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  width: 205px;
+  min-height: 560px;
+  border-right: 1px solid rgba(117, 183, 224, .18);
+}
+.brand-backdrop-title,
+.brand-backdrop-subtitle {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  white-space: nowrap;
+  color: rgba(150, 204, 239, .88);
+  text-shadow: 0 3px 18px rgba(0, 0, 0, .48);
+}
+.brand-backdrop-title {
+  font-size: clamp(82px, 7.2vw, 128px);
+  font-weight: 800;
+  letter-spacing: .08em;
+  line-height: .9;
+}
+.brand-backdrop-subtitle {
+  font-size: clamp(18px, 1.55vw, 26px);
+  font-weight: 600;
+  letter-spacing: .18em;
+  line-height: 1.1;
+}
+@media (max-width: 1535px) {
+  .brand-backdrop-rail { display: none; }
+  .brand-backdrop-photo { width: 58%; opacity: .24; }
+}
+@media (max-width: 900px) {
+  .brand-backdrop-photo { width: 100%; opacity: .2; }
+}
+
+/* Ajuste da marca vertical nas telas de configuração, inclusive Banco de Perguntas */
+@media (min-width: 901px) {
+  .brand-backdrop-rail {
+    display: flex !important;
+    left: 8px;
+    width: 126px;
+    min-height: 500px;
+    gap: 12px;
+  }
+  .brand-backdrop-title {
+    font-size: clamp(58px, 5.2vw, 86px);
+  }
+  .brand-backdrop-subtitle {
+    font-size: clamp(13px, 1.15vw, 18px);
+    letter-spacing: .14em;
+  }
+}
+@media (max-width: 900px) {
+  .brand-backdrop-rail { display: none !important; }
+}
+
+/* Marca vertical permanece centralizada na janela durante toda a rolagem */
+@media (min-width: 901px) {
+  .brand-backdrop-rail {
+    position: fixed !important;
+    top: 50% !important;
+    left: 8px !important;
+    transform: translateY(-50%) !important;
+    min-height: 0 !important;
+    height: min(72vh, 560px);
+    z-index: 0;
   }
 }

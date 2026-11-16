@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import BrandBackdrop from "@/components/BrandBackdrop";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,7 +27,10 @@ import {
   Check,
 } from "lucide-react";
 
+interface ExamTypeOption { id: string; name: string; duration_minutes: number; question_count: number; }
+
 interface AccessCode {
+  exam_type_id: string | null;
   id: string;
   code: string;
   candidate_name: string | null;
@@ -47,6 +51,7 @@ const generateCode = () => {
 
 const AdminAccessCodes = () => {
   const [codes, setCodes] = useState<AccessCode[]>([]);
+  const [examTypes, setExamTypes] = useState<ExamTypeOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -56,6 +61,7 @@ const AdminAccessCodes = () => {
     candidateName: "",
     candidateEmail: "",
     durationMinutes: "45",
+    examTypeId: "",
     code: generateCode(),
   });
   const navigate = useNavigate();
@@ -86,6 +92,8 @@ const AdminAccessCodes = () => {
         return;
       }
 
+      const { data: types } = await supabase.from("exam_types").select("id,name,duration_minutes,question_count").eq("is_active", true).order("name");
+      setExamTypes((types || []) as ExamTypeOption[]);
       await loadCodes();
     };
     checkAuth();
@@ -97,12 +105,20 @@ const AdminAccessCodes = () => {
       return;
     }
 
+    const selectedType = examTypes.find((type) => type.id === form.examTypeId);
+    if (!selectedType) {
+      toast({ title: "Selecione um tipo de prova", variant: "destructive" });
+      return;
+    }
+
     setCreating(true);
     const { error } = await supabase.from("access_codes").insert({
       code: form.code,
       candidate_name: form.candidateName.trim() || null,
       candidate_email: form.candidateEmail.trim(),
-      exam_duration_minutes: parseInt(form.durationMinutes) || 45,
+      exam_type_id: selectedType.id,
+      exam_duration_minutes: selectedType.duration_minutes,
+      exam_question_count: selectedType.question_count,
     });
 
     if (error) {
@@ -113,7 +129,7 @@ const AdminAccessCodes = () => {
 
     toast({ title: "Código criado com sucesso!" });
     setShowCreate(false);
-    setForm({ candidateName: "", candidateEmail: "", durationMinutes: "45", code: generateCode() });
+    setForm({ candidateName: "", candidateEmail: "", durationMinutes: "45", examTypeId: "", code: generateCode() });
     setCreating(false);
     await loadCodes();
   };
@@ -149,7 +165,8 @@ const AdminAccessCodes = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="brand-screen min-h-screen bg-background">
+      <BrandBackdrop />
       <header className="border-b bg-card sticky top-0 z-10">
         <div className="container max-w-6xl px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -209,7 +226,7 @@ const AdminAccessCodes = () => {
                     )}
                     <p className="text-xs text-muted-foreground truncate">{code.candidate_email}</p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      {code.exam_duration_minutes} min •{" "}
+                      {code.exam_duration_minutes} min • {examTypes.find(t => t.id === code.exam_type_id)?.name || "Tipo anterior"} •{" "}
                       {new Date(code.created_at).toLocaleDateString("pt-BR")}
                     </p>
                   </div>
@@ -299,8 +316,17 @@ const AdminAccessCodes = () => {
               />
             </div>
 
+            <div>
+              <Label htmlFor="examType">Tipo de prova *</Label>
+              <select id="examType" value={form.examTypeId} onChange={(e) => setForm(f => ({ ...f, examTypeId: e.target.value }))} className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                <option value="">Selecione o tipo de prova</option>
+                {examTypes.map(type => <option key={type.id} value={type.id}>{type.name} — {type.question_count} perguntas / {type.duration_minutes} min</option>)}
+              </select>
+              {form.examTypeId && (() => { const t = examTypes.find(x => x.id === form.examTypeId); return t ? <p className="text-xs text-muted-foreground mt-1">Este código herdará {t.question_count} perguntas e {t.duration_minutes} minutos do tipo selecionado.</p> : null; })()}
+              {examTypes.length === 0 && <p className="text-xs text-destructive mt-1">Cadastre um tipo de prova antes de gerar códigos.</p>}
+            </div>
             <div className="flex gap-2 pt-2">
-              <Button onClick={handleCreate} disabled={creating} className="flex-1">
+              <Button onClick={handleCreate} disabled={creating || examTypes.length === 0} className="flex-1">
                 {creating ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Plus className="h-4 w-4 mr-1" />}
                 Criar Código
               </Button>
@@ -313,3 +339,7 @@ const AdminAccessCodes = () => {
 };
 
 export default AdminAccessCodes;
+
+
+
+

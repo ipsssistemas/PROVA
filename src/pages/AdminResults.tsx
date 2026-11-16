@@ -8,7 +8,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend,
 } from "recharts";
-import { LogOut, Users, Trophy, Clock, ChevronDown, ChevronUp, KeyRound, BookOpen, Eye } from "lucide-react";
+import { LogOut, Users, Trophy, Clock, ChevronDown, ChevronUp, KeyRound, BookOpen, Eye, ClipboardList } from "lucide-react";
 
 interface ExamSession {
   id: string;
@@ -49,12 +49,20 @@ const CHART_COLORS = [
 const AdminResults = () => {
   const [sessions, setSessions] = useState<ExamSession[]>([]);
   const [questions, setQuestions] = useState<Question[]>([]);
+  const [questionCount, setQuestionCount] = useState(0);
   const [expandedSession, setExpandedSession] = useState<string | null>(null);
   const [sessionAnswers, setSessionAnswers] = useState<Record<string, Answer[]>>({});
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
+    let questionChannel: ReturnType<typeof supabase.channel> | null = null;
+    const refreshQuestionCount = async () => {
+      const { count, error } = await supabase.from("questions").select("id", { count: "exact", head: true });
+      if (!error && count !== null) setQuestionCount(count);
+    };
+    const handleWindowFocus = () => { void refreshQuestionCount(); };
+    window.addEventListener("focus", handleWindowFocus);
     const checkAuth = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { navigate("/admin"); return; }
@@ -77,9 +85,17 @@ const AdminResults = () => {
 
       setSessions((sessRes.data as ExamSession[]) || []);
       setQuestions((qRes.data as Question[]) || []);
+      setQuestionCount(qRes.data?.length || 0);
       setLoading(false);
+      questionChannel = supabase.channel("admin-question-count")
+        .on("postgres_changes", { event: "*", schema: "public", table: "questions" }, refreshQuestionCount)
+        .subscribe();
     };
     checkAuth();
+    return () => {
+      window.removeEventListener("focus", handleWindowFocus);
+      if (questionChannel) void supabase.removeChannel(questionChannel);
+    };
   }, [navigate]);
 
   const handleLogout = async () => {
@@ -164,17 +180,28 @@ const AdminResults = () => {
   const stats = getGlobalStats();
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="dashboard-shell relative min-h-screen overflow-hidden">
+      <div className="dashboard-side-left hidden 2xl:flex" aria-hidden="true">
+        <div className="dashboard-side-title">PROVAS</div>
+        <div className="dashboard-side-subtitle">CASA INTELIGENTE</div>
+      </div>
+      <div className="dashboard-side-right hidden 2xl:block" aria-hidden="true" />
       {/* Header */}
-      <header className="border-b bg-card sticky top-0 z-10">
-        <div className="container max-w-6xl px-4 py-3 flex items-center justify-between">
+      <header className="dashboard-header sticky top-0 z-20">
+        <div className="relative z-10 mx-auto max-w-[1500px] px-4 py-3 flex items-center justify-between">
           <div>
             <h1 className="text-lg font-bold font-['Space_Grotesk']">Smart Home Premium</h1>
             <p className="text-xs text-muted-foreground">Painel de Resultados</p>
           </div>
           <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => navigate("/admin/students")}>
+              <Users className="h-4 w-4 mr-1" /> Alunos
+            </Button>
             <Button variant="outline" size="sm" onClick={() => navigate("/admin/questions")}>
               <BookOpen className="h-4 w-4 mr-1" /> Perguntas
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => navigate("/admin/exam-types")}>
+              <ClipboardList className="h-4 w-4 mr-1" /> Tipos
             </Button>
             <Button variant="outline" size="sm" onClick={() => navigate("/admin/codes")}>
               <KeyRound className="h-4 w-4 mr-1" /> Códigos
@@ -186,10 +213,10 @@ const AdminResults = () => {
         </div>
       </header>
 
-      <main className="container max-w-6xl px-4 py-6 space-y-6">
+      <main className="dashboard-content relative z-10 mx-auto max-w-[1500px] px-4 py-6 space-y-6">
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card>
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+          <Card className="dashboard-card">
             <CardContent className="pt-4 pb-3 px-4">
               <div className="flex items-center gap-2 text-muted-foreground mb-1">
                 <Users className="h-4 w-4" />
@@ -198,7 +225,7 @@ const AdminResults = () => {
               <p className="text-2xl font-bold">{stats.total}</p>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="dashboard-card">
             <CardContent className="pt-4 pb-3 px-4">
               <div className="flex items-center gap-2 text-muted-foreground mb-1">
                 <Trophy className="h-4 w-4" />
@@ -207,7 +234,7 @@ const AdminResults = () => {
               <p className="text-2xl font-bold">{stats.completed}</p>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="dashboard-card">
             <CardContent className="pt-4 pb-3 px-4">
               <div className="flex items-center gap-2 text-muted-foreground mb-1">
                 <Trophy className="h-4 w-4 text-exam-success" />
@@ -216,7 +243,16 @@ const AdminResults = () => {
               <p className="text-2xl font-bold">{stats.avgScore}/30</p>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="dashboard-card">
+            <CardContent className="pt-4 pb-3 px-4">
+              <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                <BookOpen className="h-4 w-4" />
+                <span className="text-xs">Perguntas no Banco</span>
+              </div>
+              <p className="text-2xl font-bold">{questionCount}</p>
+            </CardContent>
+          </Card>
+          <Card className="dashboard-card">
             <CardContent className="pt-4 pb-3 px-4">
               <div className="flex items-center gap-2 text-muted-foreground mb-1">
                 <Clock className="h-4 w-4" />
@@ -229,7 +265,7 @@ const AdminResults = () => {
 
         {/* Global Pie Chart */}
         {sessions.length > 0 && (
-          <Card>
+          <Card className="dashboard-card">
             <CardHeader className="pb-2">
               <CardTitle className="text-base">Status das Provas</CardTitle>
             </CardHeader>
@@ -254,7 +290,7 @@ const AdminResults = () => {
         <div className="space-y-3">
           <h2 className="text-lg font-semibold font-['Space_Grotesk']">Provas Realizadas</h2>
           {sessions.map((session) => (
-            <Card key={session.id} className="overflow-hidden">
+            <Card key={session.id} className="dashboard-card overflow-hidden">
               <button
                 onClick={() => toggleSession(session.id)}
                 className="w-full text-left p-4 flex items-center justify-between hover:bg-muted/30 transition-colors"
@@ -333,7 +369,7 @@ const AdminResults = () => {
           ))}
 
           {sessions.length === 0 && (
-            <Card>
+            <Card className="dashboard-card">
               <CardContent className="py-8 text-center text-muted-foreground">
                 Nenhuma prova realizada ainda.
               </CardContent>

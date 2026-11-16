@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import BrandBackdrop from "@/components/BrandBackdrop";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -111,7 +112,8 @@ const AdminExamReview = () => {
   const getAnswer = (questionId: number) => answers.find((a) => a.question_id === questionId);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="brand-screen min-h-screen bg-background">
+      <BrandBackdrop />
       {/* Header */}
       <header className="border-b bg-card sticky top-0 z-10">
         <div className="container max-w-4xl px-4 py-3 flex items-center gap-3">
@@ -240,3 +242,7 @@ const AdminExamReview = () => {
 };
 
 export default AdminExamReview;
+
+
+
+

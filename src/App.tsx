@@ -9,7 +9,9 @@ import AdminLogin from "./pages/AdminLogin.tsx";
 import AdminResults from "./pages/AdminResults.tsx";
 import AdminAccessCodes from "./pages/AdminAccessCodes.tsx";
 import AdminQuestions from "./pages/AdminQuestions.tsx";
+import AdminExamTypes from "./pages/AdminExamTypes.tsx";
 import AdminExamReview from "./pages/AdminExamReview.tsx";
+import AdminStudents from "./pages/AdminStudents.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -25,8 +27,10 @@ const App = () => (
           <Route path="/exam/:sessionId" element={<Exam />} />
           <Route path="/admin" element={<AdminLogin />} />
           <Route path="/admin/results" element={<AdminResults />} />
+          <Route path="/admin/students" element={<AdminStudents />} />
           <Route path="/admin/codes" element={<AdminAccessCodes />} />
           <Route path="/admin/questions" element={<AdminQuestions />} />
+          <Route path="/admin/exam-types" element={<AdminExamTypes />} />
           <Route path="/admin/review/:sessionId" element={<AdminExamReview />} />
           <Route path="*" element={<NotFound />} />
         </Routes>

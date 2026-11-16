@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.4"
+    PostgrestVersion: "14.18"
   }
   public: {
     Tables: {
@@ -21,6 +21,8 @@ export type Database = {
           code: string
           created_at: string
           exam_duration_minutes: number
+          exam_question_count: number | null
+          exam_type_id: string | null
           id: string
           is_used: boolean
         }
@@ -30,6 +32,8 @@ export type Database = {
           code: string
           created_at?: string
           exam_duration_minutes?: number
+          exam_question_count?: number | null
+          exam_type_id?: string | null
           id?: string
           is_used?: boolean
         }
@@ -39,10 +43,20 @@ export type Database = {
           code?: string
           created_at?: string
           exam_duration_minutes?: number
+          exam_question_count?: number | null
+          exam_type_id?: string | null
           id?: string
           is_used?: boolean
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "access_codes_exam_type_id_fkey"
+            columns: ["exam_type_id"]
+            isOneToOne: false
+            referencedRelation: "exam_types"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       answers: {
         Row: {
@@ -122,6 +136,12 @@ export type Database = {
           },
         ]
       }
+      difficulty_levels: {
+        Row: { created_at: string; description: string; id: string; name: string; sort_order: number }
+        Insert: { created_at?: string; description: string; id?: string; name: string; sort_order: number }
+        Update: { created_at?: string; description?: string; id?: string; name?: string; sort_order?: number }
+        Relationships: []
+      }
       exam_sessions: {
         Row: {
           access_code_id: string | null
@@ -129,9 +149,11 @@ export type Database = {
           candidate_name: string
           created_at: string
           duration_minutes: number
+          exam_type_id: string | null
           finished_at: string | null
           id: string
           score: number | null
+          session_token_hash: string | null
           started_at: string
           status: string
           total_questions: number
@@ -142,9 +164,11 @@ export type Database = {
           candidate_name: string
           created_at?: string
           duration_minutes?: number
+          exam_type_id?: string | null
           finished_at?: string | null
           id?: string
           score?: number | null
+          session_token_hash?: string | null
           started_at?: string
           status?: string
           total_questions?: number
@@ -155,9 +179,11 @@ export type Database = {
           candidate_name?: string
           created_at?: string
           duration_minutes?: number
+          exam_type_id?: string | null
           finished_at?: string | null
           id?: string
           score?: number | null
+          session_token_hash?: string | null
           started_at?: string
           status?: string
           total_questions?: number
@@ -170,7 +196,76 @@ export type Database = {
             referencedRelation: "access_codes"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "exam_sessions_exam_type_id_fkey"
+            columns: ["exam_type_id"]
+            isOneToOne: false
+            referencedRelation: "exam_types"
+            referencedColumns: ["id"]
+          },
         ]
+      }
+      exam_type_categories: {
+        Row: {
+          category: string
+          created_at: string
+          exam_type_id: string
+          id: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          exam_type_id: string
+          id?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          exam_type_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exam_type_categories_exam_type_id_fkey"
+            columns: ["exam_type_id"]
+            isOneToOne: false
+            referencedRelation: "exam_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      exam_types: {
+        Row: {
+          created_at: string
+          description: string | null
+          duration_minutes: number
+          id: string
+          is_active: boolean
+          name: string
+          question_count: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number
+          id?: string
+          is_active?: boolean
+          name: string
+          question_count?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number
+          id?: string
+          is_active?: boolean
+          name?: string
+          question_count?: number
+          updated_at?: string
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
@@ -198,6 +293,8 @@ export type Database = {
           category: string
           correct_option: string
           created_at: string
+          difficulty_level_id: string
+          exam_type_id: string
           id: number
           option_a: string
           option_b: string
@@ -210,6 +307,8 @@ export type Database = {
           category: string
           correct_option: string
           created_at?: string
+          difficulty_level_id: string
+          exam_type_id: string
           id?: number
           option_a: string
           option_b: string
@@ -222,6 +321,8 @@ export type Database = {
           category?: string
           correct_option?: string
           created_at?: string
+          difficulty_level_id?: string
+          exam_type_id?: string
           id?: number
           option_a?: string
           option_b?: string
@@ -230,7 +331,11 @@ export type Database = {
           option_e?: string | null
           question_text?: string
         }
-        Relationships: []
+        Relationships: [
+          { foreignKeyName: "questions_difficulty_level_fk"; columns: ["difficulty_level_id"]; isOneToOne: false; referencedRelation: "difficulty_levels"; referencedColumns: ["id"] },
+          { foreignKeyName: "questions_exam_type_fk"; columns: ["exam_type_id"]; isOneToOne: false; referencedRelation: "exam_types"; referencedColumns: ["id"] },
+          { foreignKeyName: "questions_type_category_fk"; columns: ["exam_type_id", "category"]; isOneToOne: false; referencedRelation: "exam_type_categories"; referencedColumns: ["exam_type_id", "category"] }
+        ]
       }
       user_roles: {
         Row: {
@@ -255,12 +360,43 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      finish_exam: {
+        Args: { p_session_id: string; p_session_token: string }
+        Returns: Json
+      }
+      get_exam_questions: {
+        Args: { p_session_id: string; p_session_token: string }
+        Returns: {
+          category: string
+          option_a: string
+          option_b: string
+          option_c: string
+          option_d: string
+          option_e: string
+          question_id: number
+          question_order: number
+          question_text: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
         Returns: boolean
+      }
+      start_exam: {
+        Args: { p_candidate_name: string; p_code: string }
+        Returns: Json
+      }
+      submit_exam_answer: {
+        Args: {
+          p_question_id: number
+          p_selected_option: string
+          p_session_id: string
+          p_session_token: string
+        }
+        Returns: undefined
       }
     }
     Enums: {

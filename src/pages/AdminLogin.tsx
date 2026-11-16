@@ -1,4 +1,5 @@
 import { useState } from "react";
+import BrandBackdrop from "@/components/BrandBackdrop";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -44,7 +45,8 @@ const AdminLogin = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+    <div className="brand-screen min-h-screen bg-background flex items-center justify-center p-4">
+      <BrandBackdrop />
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="mx-auto mb-3 h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
@@ -88,3 +90,7 @@ const AdminLogin = () => {
 };
 
 export default AdminLogin;
+
+
+
+
